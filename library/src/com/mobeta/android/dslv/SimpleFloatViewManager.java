@@ -47,9 +47,11 @@ public class SimpleFloatViewManager implements DragSortListView.FloatViewManager
 
         v.setPressed(false);
 
+        //将getChildAt 取到的listview中item view 的图像 保存到 mFloatBitmap 用起创建mImageView 并返回
         // Create a copy of the drawing cache so that it does not get
         // recycled by the framework when the list tries to clean up memory
         //v.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        //下面3行将一个view的图像保存到了bitmap中
         v.setDrawingCacheEnabled(true);
         mFloatBitmap = Bitmap.createBitmap(v.getDrawingCache());
         v.setDrawingCacheEnabled(false);
@@ -79,6 +81,7 @@ public class SimpleFloatViewManager implements DragSortListView.FloatViewManager
      */
     @Override
     public void onDestroyFloatView(View floatView) {
+    	//设置ImageView为无图 释放bitmap
         ((ImageView) floatView).setImageDrawable(null);
 
         mFloatBitmap.recycle();

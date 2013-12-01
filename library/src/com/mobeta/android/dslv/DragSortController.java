@@ -234,6 +234,9 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
         return mDragging;
     }
 
+    /**
+     * dslv 的 OnTouchListener
+     */
     @Override
     public boolean onTouch(View v, MotionEvent ev) {
         if (!mDslv.isDragEnabled() || mDslv.listViewIntercepted()) {
@@ -252,6 +255,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
                 mCurrY = (int) ev.getY();
                 break;
             case MotionEvent.ACTION_UP:
+            	//如果drag x距离超过一半 则不进行drag动画
                 if (mRemoveEnabled && mIsRemoving) {
                     int x = mPositionX >= 0 ? mPositionX : -mPositionX;
                     int removePoint = mDslv.getWidth() / 2;

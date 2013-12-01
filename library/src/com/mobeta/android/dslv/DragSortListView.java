@@ -21,6 +21,7 @@
 
 package com.mobeta.android.dslv;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
@@ -144,13 +145,15 @@ public class DragSortListView extends ListView {
      * The difference (in x) between screen coordinates and coordinates
      * in this view.
      */
-    private int mOffsetX;
+    @SuppressWarnings("unused")
+	private int mOffsetX;
 
     /**
      * The difference (in y) between screen coordinates and coordinates
      * in this view.
      */
-    private int mOffsetY;
+    @SuppressWarnings("unused")
+	private int mOffsetY;
 
     /**
      * A listener that receives callbacks whenever the floating View
@@ -165,6 +168,7 @@ public class DragSortListView extends ListView {
     private DropListener mDropListener;
 
     /**
+     * 通过设置mRemoveListener实现真正的数据删除
      * A listener that receives a callback when the floating View
      * (or more precisely the originally dragged item) is removed
      * by one of the provided gestures.
@@ -287,7 +291,8 @@ public class DragSortListView extends ListView {
     /**
      * Last touch x.
      */
-    private int mLastX;
+    @SuppressWarnings("unused")
+	private int mLastX;
 
     /**
      * Last touch y.
@@ -297,7 +302,8 @@ public class DragSortListView extends ListView {
     /**
      * The touch y-coord at which drag started
      */
-    private int mDragStartY;
+    @SuppressWarnings("unused")
+	private int mDragStartY;
 
     /**
      * Drag flag bit. Floating View can move in the positive
@@ -431,6 +437,7 @@ public class DragSortListView extends ListView {
 
     private RemoveAnimator mRemoveAnimator;
 
+    //未使用
     private LiftAnimator mLiftAnimator;
 
     private DropAnimator mDropAnimator;
@@ -438,7 +445,8 @@ public class DragSortListView extends ListView {
     private boolean mUseRemoveVelocity;
     private float mRemoveVelocityX = 0;
 
-    public DragSortListView(Context context, AttributeSet attrs) {
+    @SuppressLint("Recycle")
+	public DragSortListView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         int defaultDuration = 150;
@@ -520,6 +528,8 @@ public class DragSortListView extends ListView {
                         R.styleable.DragSortListView_float_background_color,
                         Color.BLACK);
 
+                //用DragSortController 对自己进行一些初始设置 并将DragSortController 当做mFloatViewManager 和TouchListener用
+                //mFloatViewManager 的onDragFloatView实现在DragSortController中
                 DragSortController controller = new DragSortController(
                         this, dragHandleId, dragInitMode, removeMode,
                         clickRemoveId, flingHandleId);
@@ -545,6 +555,7 @@ public class DragSortListView extends ListView {
             mDropAnimator = new DropAnimator(smoothness, dropAnimDuration);
         }
 
+        //创建一个ACTION_CANCEL事件
         mCancelEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0f, 0f, 0f, 0f, 0, 0f,
                 0f, 0, 0);
 
@@ -603,6 +614,7 @@ public class DragSortListView extends ListView {
      */
     @Override
     public void setAdapter(ListAdapter adapter) {
+    	//对设置的adapter 封装mAdapterWrapper
         if (adapter != null) {
             mAdapterWrapper = new AdapterWrapper(adapter);
             adapter.registerDataSetObserver(mObserver);
@@ -734,7 +746,7 @@ public class DragSortListView extends ListView {
                     v = new DragSortItemView(getContext());
                 }
                 v.setLayoutParams(new AbsListView.LayoutParams(
-                        ViewGroup.LayoutParams.FILL_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT));
                 v.addView(child);
             }
@@ -843,7 +855,8 @@ public class DragSortListView extends ListView {
         }
     }
 
-    private void printPosData() {
+    @SuppressWarnings("unused")
+	private void printPosData() {
         Log.d("mobeta", "mSrcPos=" + mSrcPos + " mFirstExpPos=" + mFirstExpPos + " mSecondExpPos="
                 + mSecondExpPos);
     }
@@ -1185,6 +1198,7 @@ public class DragSortListView extends ListView {
                 return;
             }
 
+            //fraction 当前已过事件占动画总时间的比例
             float fraction = ((float) (SystemClock.uptimeMillis() - mStartTime)) / mDurationF;
 
             if (fraction >= 1f) {
@@ -1309,7 +1323,8 @@ public class DragSortListView extends ListView {
 
         private int mFirstPos;
         private int mSecondPos;
-        private int srcPos;
+        @SuppressWarnings("unused")
+		private int srcPos;
 
         public RemoveAnimator(float smoothness, int duration) {
             super(smoothness, duration);
@@ -1868,7 +1883,8 @@ public class DragSortListView extends ListView {
         }
     }
 
-    private void adjustItem(int position) {
+    @SuppressWarnings("unused")
+	private void adjustItem(int position) {
         View v = getChildAt(position - getFirstVisiblePosition());
 
         if (v != null) {
@@ -2006,7 +2022,8 @@ public class DragSortListView extends ListView {
 
     private int calcItemHeight(int position, int childHeight) {
 
-        int divHeight = getDividerHeight();
+        @SuppressWarnings("unused")
+		int divHeight = getDividerHeight();
 
         boolean isSliding = mAnimate && mFirstExpPos != mSecondExpPos;
         int maxNonSrcBlankHeight = mFloatViewHeight - mItemHeightCollapsed;
@@ -2096,7 +2113,7 @@ public class DragSortListView extends ListView {
     private void measureItem(View item) {
         ViewGroup.LayoutParams lp = item.getLayoutParams();
         if (lp == null) {
-            lp = new AbsListView.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp = new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             item.setLayoutParams(lp);
         }
         int wspec = ViewGroup.getChildMeasureSpec(mWidthMeasureSpec, getListPaddingLeft()
@@ -2110,6 +2127,9 @@ public class DragSortListView extends ListView {
         item.measure(wspec, hspec);
     }
 
+    /**
+     * 测量FloatView FloatViewManager.onCreateFloatView获取的view未进行过measure
+     */
     private void measureFloatView() {
         if (mFloatView != null) {
             measureItem(mFloatView);
@@ -2122,6 +2142,7 @@ public class DragSortListView extends ListView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         // Log.d("mobeta", "onMeasure called");
+        //对 mFloatView measure
         if (mFloatView != null) {
             if (mFloatView.isLayoutRequested()) {
                 measureFloatView();
@@ -2135,6 +2156,7 @@ public class DragSortListView extends ListView {
     protected void layoutChildren() {
         super.layoutChildren();
 
+        //对mFloatView layout
         if (mFloatView != null) {
             if (mFloatView.isLayoutRequested() && !mFloatViewOnMeasured) {
                 // Have to measure here when usual android measure
@@ -2149,7 +2171,8 @@ public class DragSortListView extends ListView {
 
     protected boolean onDragTouchEvent(MotionEvent ev) {
         // we are in a drag
-        int action = ev.getAction() & MotionEvent.ACTION_MASK;
+        @SuppressWarnings("unused")
+		int action = ev.getAction() & MotionEvent.ACTION_MASK;
 
         switch (ev.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_CANCEL:
@@ -2173,9 +2196,11 @@ public class DragSortListView extends ListView {
         return true;
     }
 
-    private boolean mFloatViewInvalidated = false;
+    @SuppressWarnings("unused")
+	private boolean mFloatViewInvalidated = false;
 
-    private void invalidateFloatView() {
+    @SuppressWarnings("unused")
+	private void invalidateFloatView() {
         mFloatViewInvalidated = true;
     }
 
@@ -2282,6 +2307,7 @@ public class DragSortListView extends ListView {
             mDragSortTracker.startTracking();
         }
 
+        //开始drag后 向listview发送取消事件 让其不再接收touch事件
         // once float view is created, events are no longer passed
         // to ListView
         switch (mCancelMethod) {
@@ -2404,6 +2430,9 @@ public class DragSortListView extends ListView {
         mFloatViewMid = mFloatLoc.y + mFloatViewHeightHalf;
     }
 
+    /**
+     * remove结束后释放mFloatView
+     */
     private void destroyFloatView() {
         if (mFloatView != null) {
             mFloatView.setVisibility(GONE);
@@ -2821,8 +2850,10 @@ public class DragSortListView extends ListView {
 
         private boolean mScrolling = false;
 
-        private int mLastHeader;
-        private int mFirstFooter;
+        @SuppressWarnings("unused")
+		private int mLastHeader;
+        @SuppressWarnings("unused")
+		private int mFirstFooter;
 
         public boolean isScrolling() {
             return mScrolling;

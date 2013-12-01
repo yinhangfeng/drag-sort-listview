@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import android.app.ListActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -45,6 +46,10 @@ public class Launcher extends ListActivity {
                   mActivities.remove(i);
                   break;
               }
+          }
+          
+          for(ActivityInfo a : mActivities) {
+        	  Log.i("Launcher", "Activity name="+a.name);
           }
         } catch (PackageManager.NameNotFoundException e) {
           // Do nothing. Adapter will be empty.

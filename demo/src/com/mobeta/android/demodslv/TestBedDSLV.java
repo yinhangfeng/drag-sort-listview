@@ -54,6 +54,7 @@ EnablesDialog.EnabledOkListener
 
     @Override
     public void onRemoveOkClick(int removeMode) {
+    	//必须重新创建DslvFragment  才能进行removeMode设置
         if (removeMode != mRemoveMode) {
             mRemoveMode = removeMode;
             getSupportFragmentManager().beginTransaction().replace(R.id.test_bed, getNewDslvFragment(), mTag).commit();
@@ -62,6 +63,7 @@ EnablesDialog.EnabledOkListener
 
     @Override
     public void onDragOkClick(int dragStartMode) {
+    	//通过获取controller进行DragInitMode 设置
         mDragStartMode = dragStartMode;
         DSLVFragment f = (DSLVFragment) getSupportFragmentManager().findFragmentByTag(mTag);
         f.getController().setDragInitMode(dragStartMode);

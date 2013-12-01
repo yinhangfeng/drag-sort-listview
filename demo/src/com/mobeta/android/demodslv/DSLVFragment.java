@@ -38,6 +38,7 @@ public class DSLVFragment extends ListFragment {
             new DragSortListView.RemoveListener() {
                 @Override
                 public void remove(int which) {
+                	//数据删除
                     adapter.remove(adapter.getItem(which));
                 }
             };
@@ -100,6 +101,7 @@ public class DSLVFragment extends ListFragment {
     }
 
     /**
+     * 绑定dslv控制器 用控制器进行一些设置
      * Called in onCreateView. Override this to provide a custom
      * DragSortController.
      */
@@ -122,6 +124,7 @@ public class DSLVFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
+    	//获取dslv 绑定控制器 进行一些设置
         mDslv = (DragSortListView) inflater.inflate(getLayout(), container, false);
 
         mController = buildController(mDslv);
@@ -136,6 +139,7 @@ public class DSLVFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        //设置 回复header footer 设置adapter
         mDslv = (DragSortListView) getListView(); 
 
         mDslv.setDropListener(onDrop);
