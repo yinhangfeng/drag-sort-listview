@@ -1,6 +1,7 @@
 package com.mobeta.android.dslv;
 
 import android.graphics.Point;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
@@ -20,7 +21,8 @@ import android.widget.AdapterView;
  * {@link DragSortListView} instance.
  */
 public class DragSortController extends SimpleFloatViewManager implements View.OnTouchListener, GestureDetector.OnGestureListener {
-
+	private static final String TAG = "DragSortController";
+	
     /**
      * Drag init mode enum.
      */
@@ -30,6 +32,9 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
 
     private int mDragInitMode = ON_DOWN;
 
+    /**
+     * 是否允许排序
+     */
     private boolean mSortEnabled = true;
 
     /**
@@ -50,8 +55,14 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     private boolean mRemoveEnabled = false;
     private boolean mIsRemoving = false;
 
+    /**
+     * 手势检测
+     */
     private GestureDetector mDetector;
 
+    /**
+     * FlingRemove手势检测
+     */
     private GestureDetector mFlingRemoveDetector;
 
     private int mTouchSlop;
@@ -68,24 +79,43 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
 
     private int[] mTempLoc = new int[2];
 
+    /**
+     * 本次操作的item坐标
+     */
     private int mItemX;
     private int mItemY;
 
+    /**
+     * action down时x
+     */
     private int mCurrX;
+    /**
+     * action down时y
+     */
     private int mCurrY;
 
     private boolean mDragging = false;
 
+    /**
+     * fling 删除需要的最小速度
+     */
     private float mFlingSpeed = 500f;
 
     private int mDragHandleId;
 
     private int mClickRemoveId;
 
+    /**
+     * fling remove handle 默认0 item本身
+     */
     private int mFlingHandleId;
     private boolean mCanDrag;
 
     private DragSortListView mDslv;
+    
+    /**
+     * floatView当前的位置
+     */
     private int mPositionX;
 
     /**
@@ -215,6 +245,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     }
 
     /**
+     * 开始拖动 设置dragFlags 允许拖动的方向
      * Sets flags to restrict certain motions of the floating View
      * based on DragSortController settings (such as remove mode).
      * Starts the drag on the DragSortListView.
@@ -262,11 +293,12 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
                 mCurrY = (int) ev.getY();
                 break;
             case MotionEvent.ACTION_UP:
-            	//如果drag x距离超过一半 则不进行drag动画
+            	//如果drag x距离超过一半 则放手后不回弹 直接删除
                 if (mRemoveEnabled && mIsRemoving) {
                     int x = mPositionX >= 0 ? mPositionX : -mPositionX;
                     int removePoint = mDslv.getWidth() / 2;
                     if (x > removePoint) {
+                    	Log.i(TAG, "onTouch x > removePoint");
                         mDslv.stopDragWithVelocity(true, 0);
                     }
                 }
@@ -383,6 +415,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
 
         mHitPos = startDragPosition(ev);
         if (mHitPos != MISS && mDragInitMode == ON_DOWN) {
+        	//mDragInitMode 为ON_DOWN 的drag开始
             startDrag(mHitPos, (int) ev.getX() - mItemX, (int) ev.getY() - mItemY);
         }
 
@@ -396,7 +429,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-
+    	//Log.d(TAG, "onScroll");
         final int x1 = (int) e1.getX();
         final int y1 = (int) e1.getY();
         final int x2 = (int) e2.getX();
@@ -407,15 +440,18 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
         if (mCanDrag && !mDragging && (mHitPos != MISS || mFlingHitPos != MISS)) {
             if (mHitPos != MISS) {
                 if (mDragInitMode == ON_DRAG && Math.abs(y2 - y1) > mTouchSlop && mSortEnabled) {
+                	//mDragInitMode 为ON_DRAG 的drag开始
                     startDrag(mHitPos, deltaX, deltaY);
                 }
                 else if (mDragInitMode != ON_DOWN && Math.abs(x2 - x1) > mTouchSlop && mRemoveEnabled)
                 {
+                	//非ON_DOWN 时 remove drag开始
                     mIsRemoving = true;
                     startDrag(mFlingHitPos, deltaX, deltaY);
                 }
             } else if (mFlingHitPos != MISS) {
                 if (Math.abs(x2 - x1) > mTouchSlop && mRemoveEnabled) {
+                	//flinghandle 的remove开始
                     mIsRemoving = true;
                     startDrag(mFlingHitPos, deltaX, deltaY);
                 } else if (Math.abs(y2 - y1) > mTouchSlop) {
@@ -432,6 +468,8 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     public void onLongPress(MotionEvent e) {
         // Log.d("mobeta", "lift listener long pressed");
         if (mHitPos != MISS && mDragInitMode == ON_LONG_PRESS) {
+        	//如果drag为长按模式 开始drag
+        	//mDragInitMode 为ON_DOWN 的drag开始
             mDslv.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
             startDrag(mHitPos, mCurrX - mItemX, mCurrY - mItemY);
         }
@@ -447,6 +485,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     @Override
     public boolean onSingleTapUp(MotionEvent ev) {
         if (mRemoveEnabled && mRemoveMode == CLICK_REMOVE) {
+        	//点击删除模式
             if (mClickRemoveHitPos != MISS) {
                 mDslv.removeItem(mClickRemoveHitPos - mDslv.getHeaderViewsCount());
             }
@@ -465,8 +504,10 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
                 @Override
                 public final boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
                         float velocityY) {
+                	//允许fling remove
                     // Log.d("mobeta", "on fling remove called");
                     if (mRemoveEnabled && mIsRemoving) {
+                    	//当前移动超过ListView width/5 速度大于mFlingSpeed 则执行以velocityX为初速度的删除动画
                         int w = mDslv.getWidth();
                         int minPos = w / 5;
                         if (velocityX > mFlingSpeed) {

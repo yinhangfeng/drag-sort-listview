@@ -80,6 +80,7 @@ public class DragSortListView extends ListView {
     private Point mTouchLoc = new Point();
 
     /**
+     * floatview中点的y坐标
      * The middle (in the y-direction) of the floating View.
      */
     private int mFloatViewMid;
@@ -102,18 +103,21 @@ public class DragSortListView extends ListView {
     private float mCurrFloatAlpha = 1.0f;//floatview当前alpha
 
     /**
+     * floatView当前的位置
      * While drag-sorting, the current position of the floating
      * View. If dropped, the dragged item will land in this position.
      */
     private int mFloatPos;
 
     /**
+     * 可作为getChildAt()参数
      * The first expanded ListView position that helps represent
      * the drop slot tracking the floating View.
      */
     private int mFirstExpPos;
 
     /**
+     * 可作为getChildAt()参数
      * The second expanded ListView position that helps represent
      * the drop slot tracking the floating View. This can equal
      * mFirstExpPos if there is no slide shuffle occurring; otherwise
@@ -127,11 +131,14 @@ public class DragSortListView extends ListView {
     private boolean mAnimate = false;
 
     /**
+     * drag开始时的item位置
      * The user dragged from this position.
      */
     private int mSrcPos;
 
     /**
+     * 触摸点相对于item的偏移
+     * 用于使drag时 触摸点相对于item的位置不变
      * Offset (in x) within the dragged item at which the user
      * picked it up (or first touched down with the digitalis).
      */
@@ -313,18 +320,21 @@ public class DragSortListView extends ListView {
 	private int mDragStartY;
 
     /**
+     * 是否允许X轴正方向拖动
      * Drag flag bit. Floating View can move in the positive
      * x direction.
      */
     public final static int DRAG_POS_X = 0x1;
 
     /**
+     * 是否允许X轴负方向拖动
      * Drag flag bit. Floating View can move in the negative
      * x direction.
      */
     public final static int DRAG_NEG_X = 0x2;
 
     /**
+     * 是否允Y轴正方向拖动
      * Drag flag bit. Floating View can move in the positive
      * y direction. This is subtle. What this actually means is
      * that, if enabled, the floating View can be dragged below its starting
@@ -333,6 +343,7 @@ public class DragSortListView extends ListView {
     public final static int DRAG_POS_Y = 0x4;
 
     /**
+     * 是否允Y轴负方向拖动
      * Drag flag bit. Floating View can move in the negative
      * y direction. This is subtle. What this actually means is
      * that the floating View can be dragged above its starting
@@ -447,7 +458,9 @@ public class DragSortListView extends ListView {
 
     private RemoveAnimator mRemoveAnimator;
 
-    //未使用
+    /**
+     * 未使用
+     */
     private LiftAnimator mLiftAnimator;
 
     private DropAnimator mDropAnimator;
@@ -547,8 +560,8 @@ public class DragSortListView extends ListView {
                 controller.setSortEnabled(sortEnabled);
                 controller.setBackgroundColor(bgColor);
 
-                mFloatViewManager = controller;
-                setOnTouchListener(controller);
+                mFloatViewManager = controller;//controller为FloatViewManager
+                setOnTouchListener(controller);//controller为touchListener
             }
 
             a.recycle();
@@ -839,8 +852,8 @@ public class DragSortListView extends ListView {
                 alphaMod = 0;
             }
 
-            final int alpha = (int) (255f * mCurrFloatAlpha * alphaMod);
-
+            final int alpha = 255;//(int) (255f * mCurrFloatAlpha * alphaMod);/////////
+            //Log.i(TAG, "dispatchDraw mCurrFloatAlpha="+mCurrFloatAlpha+" alphaMod="+alphaMod+" alpha="+alpha);
             canvas.save();
             // Log.d("mobeta", "clip rect bounds: " + canvas.getClipBounds());
             canvas.translate(mFloatLoc.x, mFloatLoc.y);
@@ -926,7 +939,7 @@ public class DragSortListView extends ListView {
      * and layoutChildren.
      *
      * @param position 
-     * @param top
+     * @param top position处item的top
      * @param height Height of item at position. If -1, this function
      * calculates this height.
      *
@@ -996,8 +1009,12 @@ public class DragSortListView extends ListView {
         return edge;
     }
 
+    /**
+     * 更新floatView位置参数
+     */
     private boolean updatePositions() {
-
+    	
+    	//获取mFirstExpPos对应的view为startView 没有则为getChildCount() / 2对应的view
         final int first = getFirstVisiblePosition();
         int startPos = mFirstExpPos;
         View startView = getChildAt(startPos - first);
@@ -1663,6 +1680,7 @@ public class DragSortListView extends ListView {
 
         // if (mFloatView != null) {
         if (mDragState == DRAGGING) {
+        	//只有在 startdrag mDragState设置为DRAGGING
             onDragTouchEvent(ev);
             more = true; // give us more!
         } else {
@@ -1841,9 +1859,10 @@ public class DragSortListView extends ListView {
     private void continueDrag(int x, int y) {
 
         // proposed position
+    	//获取当前floatView坐标
         mFloatLoc.x = x - mDragDeltaX;
         mFloatLoc.y = y - mDragDeltaY;
-
+// TODO
         doDragFloatView(true);
 
         int minY = Math.min(y, mFloatViewMid + mFloatViewHeightHalf);
@@ -1905,12 +1924,16 @@ public class DragSortListView extends ListView {
         updateScrollStarts();
     }
 
+    /**
+     * 调整所有item
+     */
     private void adjustAllItems() {
         final int first = getFirstVisiblePosition();
         final int last = getLastVisiblePosition();
 
         int begin = Math.max(0, getHeaderViewsCount() - first);
         int end = Math.min(last - first, getCount() - 1 - getFooterViewsCount() - first);
+        //Log.i(TAG, "adjustAllItems begin="+begin+" end="+end);
 
         for (int i = begin; i <= end; ++i) {
             View v = getChildAt(i);
@@ -1972,6 +1995,9 @@ public class DragSortListView extends ListView {
         }
     }
 
+    /**
+     * 获取position处item的height
+     */
     private int getChildHeight(int position) {
         if (position == mSrcPos) {
             return 0;
@@ -2206,6 +2232,9 @@ public class DragSortListView extends ListView {
         }
     }
 
+    /**
+     * 处理dragevent
+     */
     protected boolean onDragTouchEvent(MotionEvent ev) {
         // we are in a drag
 		int action = ev.getAction() & MotionEvent.ACTION_MASK;
@@ -2312,6 +2341,7 @@ public class DragSortListView extends ListView {
             getParent().requestDisallowInterceptTouchEvent(true);
         }
 
+        // pos 作为ViewGroup.getChildAt()的参数
         int pos = position + getHeaderViewsCount();
         mFirstExpPos = pos;
         mSecondExpPos = pos;
@@ -2321,20 +2351,23 @@ public class DragSortListView extends ListView {
         // mDragState = dragType;
         mDragState = DRAGGING;
         mDragFlags = 0;
-        mDragFlags |= dragFlags;
+        mDragFlags |= dragFlags;//保存本次dragFlags
 
         mFloatView = floatView;
         measureFloatView(); // sets mFloatViewHeight
 
+        //保存触摸点相对于item的偏移
         mDragDeltaX = deltaX;
         mDragDeltaY = deltaY;
         mDragStartY = mY;
 
         // updateFloatView(mX - mDragDeltaX, mY - mDragDeltaY);
+        //当前floatView的位置
         mFloatLoc.x = mX - mDragDeltaX;
         mFloatLoc.y = mY - mDragDeltaY;
 
         // set src item invisible
+        // 获取开始drag时原始item 并设置其不可见单占据原位置
         final View srcItem = getChildAt(mSrcPos - getFirstVisiblePosition());
 
         if (srcItem != null) {
@@ -2357,6 +2390,7 @@ public class DragSortListView extends ListView {
                 break;
         }
 
+        //重新布局 使srcItem.setVisibility(View.INVISIBLE);有效?
         requestLayout();
 
         if (mLiftAnimator != null) {
@@ -2366,8 +2400,11 @@ public class DragSortListView extends ListView {
         return true;
     }
 
+    /**
+     * 执行DragFloatView
+     */
     private void doDragFloatView(boolean forceInvalidate) {
-        int movePos = getFirstVisiblePosition() + getChildCount() / 2;
+        int movePos = getFirstVisiblePosition() + getChildCount() / 2;//当前ListView可见item 中间item的位置(ListView包括header 的 position)
         View moveItem = getChildAt(getChildCount() / 2);
 
         if (moveItem == null) {
@@ -2380,14 +2417,18 @@ public class DragSortListView extends ListView {
     private void doDragFloatView(int movePos, View moveItem, boolean forceInvalidate) {
         mBlockLayoutRequests = true;
 
+        //更新floatView位置
         updateFloatView();
 
         int oldFirstExpPos = mFirstExpPos;
         int oldSecondExpPos = mSecondExpPos;
 
+        //更新floatView位置参数
         boolean updated = updatePositions();
 
         if (updated) {
+        	//floatView位置参数更新则调整所有item位置
+        	//TODO
             adjustAllItems();
             int scroll = adjustScroll(movePos, moveItem, oldFirstExpPos, oldSecondExpPos);
             // Log.d("mobeta", "  adjust scroll="+scroll);
@@ -2404,6 +2445,7 @@ public class DragSortListView extends ListView {
     }
 
     /**
+     * 更新floatView位置(在mDragFlags 约束下)
      * Sets float View location based on suggested values and
      * constraints set in mDragFlags.
      */
@@ -2418,6 +2460,7 @@ public class DragSortListView extends ListView {
         final int floatY = mFloatLoc.y;
 
         // restrict x motion
+        //不允许左右drag时 重设位置
         int padLeft = getPaddingLeft();
         if ((mDragFlags & DRAG_POS_X) == 0 && floatX > padLeft) {
             mFloatLoc.x = padLeft;
@@ -2431,6 +2474,7 @@ public class DragSortListView extends ListView {
         final int firstPos = getFirstVisiblePosition();
         final int lastPos = getLastVisiblePosition();
 
+        //计算drag时top和bottom边界
         // Log.d("mobeta",
         // "nHead="+numHeaders+" nFoot="+numFooters+" first="+firstPos+" last="+lastPos);
         int topLimit = getPaddingTop();
@@ -2438,6 +2482,7 @@ public class DragSortListView extends ListView {
             topLimit = getChildAt(numHeaders - firstPos - 1).getBottom();
         }
         if ((mDragFlags & DRAG_NEG_Y) == 0) {
+        	//不允许 y负向drag
             if (firstPos <= mSrcPos) {
                 topLimit = Math.max(getChildAt(mSrcPos - firstPos).getTop(), topLimit);
             }
@@ -2458,6 +2503,7 @@ public class DragSortListView extends ListView {
         // Log.d("mobeta", "limit=" + limit);
         // Log.d("mobeta", "mDragDeltaY=" + mDragDeltaY);
 
+        //将floatView约束在topLimit，bottomLimit之间
         if (floatY < topLimit) {
             mFloatLoc.y = topLimit;
         } else if (floatY + mFloatViewHeight > bottomLimit) {
@@ -2465,6 +2511,7 @@ public class DragSortListView extends ListView {
         }
 
         // get y-midpoint of floating view (constrained to ListView bounds)
+        //计算当前floatview中点的y坐标
         mFloatViewMid = mFloatLoc.y + mFloatViewHeightHalf;
     }
 
