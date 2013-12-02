@@ -39,10 +39,14 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     public static final int FLING_REMOVE = 1;
 
     /**
+     * remove方式
      * The current remove mode.
      */
     private int mRemoveMode;
 
+    /**
+     * 是否允许remove
+     */
     private boolean mRemoveEnabled = false;
     private boolean mIsRemoving = false;
 
@@ -57,6 +61,9 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     private int mHitPos = MISS;
     private int mFlingHitPos = MISS;
 
+    /**
+     * remove点击的item在listView中的位置
+     */
     private int mClickRemoveHitPos = MISS;
 
     private int[] mTempLoc = new int[2];
@@ -212,9 +219,9 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
      * based on DragSortController settings (such as remove mode).
      * Starts the drag on the DragSortListView.
      *
-     * @param position The list item position (includes headers).
-     * @param deltaX Touch x-coord minus left edge of floating View.
-     * @param deltaY Touch y-coord minus top edge of floating View.
+     * @param position 作为ViewGroup.getChildAt()的参数 The list item position (includes headers).
+     * @param deltaX drag触摸点在item中的相对坐标 Touch x-coord minus left edge of floating View.
+     * @param deltaY drag触摸点在item中的相对坐标 Touch y-coord minus top edge of floating View.
      *
      * @return True if drag started, false otherwise.
      */
@@ -322,10 +329,16 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
         return viewIdHitPosition(ev, mFlingHandleId);
     }
 
+    /**
+     * 当touchEvent 在item上且在DragHandleId对应的view范围内时 获取touchEvent坐标对应的ListView中item的位置(包括headers/footers)
+     * 并保存该item的坐标于mItemX mItemY
+     * @param DragHandleId 为0 则DragHandle为ListView的item
+     */
     public int viewIdHitPosition(MotionEvent ev, int id) {
         final int x = (int) ev.getX();
         final int y = (int) ev.getY();
 
+        //获取touchEvent落在listView的第几个元素上 包括headers/footers
         int touchPos = mDslv.pointToPosition(x, y); // includes headers/footers
 
         final int numHeaders = mDslv.getHeaderViewsCount();
@@ -336,19 +349,20 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
         // We're only interested if the touch was on an
         // item that's not a header or footer.
         if (touchPos != AdapterView.INVALID_POSITION && touchPos >= numHeaders
-                && touchPos < (count - numFooters)) {
+                && touchPos < (count - numFooters)) { //如果touchevent在ListView的item上
             final View item = mDslv.getChildAt(touchPos - mDslv.getFirstVisiblePosition());
             final int rawX = (int) ev.getRawX();
             final int rawY = (int) ev.getRawY();
 
+            //获取draghandle对应的view 如果id == 0 则是item本身
             View dragBox = id == 0 ? item : (View) item.findViewById(id);
-            if (dragBox != null) {
+            if (dragBox != null) {//获取dragBox在屏幕上的坐标
                 dragBox.getLocationOnScreen(mTempLoc);
 
                 if (rawX > mTempLoc[0] && rawY > mTempLoc[1] &&
                         rawX < mTempLoc[0] + dragBox.getWidth() &&
                         rawY < mTempLoc[1] + dragBox.getHeight()) {
-
+                	//如果touchevent 在dragBox范围内 保存当前drag的item坐标(Listview内)
                     mItemX = item.getLeft();
                     mItemY = item.getTop();
 
@@ -363,6 +377,7 @@ public class DragSortController extends SimpleFloatViewManager implements View.O
     @Override
     public boolean onDown(MotionEvent ev) {
         if (mRemoveEnabled && mRemoveMode == CLICK_REMOVE) {
+        	//如果是点击remove 则获取remove item的位置
             mClickRemoveHitPos = viewIdHitPosition(ev, mClickRemoveId);
         }
 

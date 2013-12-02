@@ -19,7 +19,7 @@ public class DSLVFragmentClicks extends DSLVFragment {
         return f;
     }
 
-    ///////////
+    ///////////未使用
     AdapterView.OnItemLongClickListener mLongClickListener = 
             new AdapterView.OnItemLongClickListener() {
                 @Override

@@ -58,15 +58,18 @@ import java.util.ArrayList;
  *
  */
 public class DragSortListView extends ListView {
+	private static final String TAG = "DragSortListView";
     
     
     /**
      * The View that floats above the ListView and represents
      * the dragged item.
+     * 整个过程 mFloatView并没有添加到任何ViewGroup中
      */
     private View mFloatView;
 
     /**
+     * floatview的当前位置
      * The float View location. First based on touch location
      * and given deltaX and deltaY. Then restricted by callback
      * to FloatViewManager.onDragFloatView(). Finally restricted
@@ -95,8 +98,8 @@ public class DragSortListView extends ListView {
     /**
      * Transparency for the floating View (XML attribute).
      */
-    private float mFloatAlpha = 1.0f;
-    private float mCurrFloatAlpha = 1.0f;
+    private float mFloatAlpha = 1.0f;//floatview初始alpha
+    private float mCurrFloatAlpha = 1.0f;//floatview当前alpha
 
     /**
      * While drag-sorting, the current position of the floating
@@ -185,7 +188,7 @@ public class DragSortListView extends ListView {
     /**
      * Drag state enum.
      */
-    private final static int IDLE = 0;
+    private final static int IDLE = 0;//空闲
     private final static int REMOVING = 1;
     private final static int DROPPING = 2;
     private final static int STOPPED = 3;
@@ -279,22 +282,26 @@ public class DragSortListView extends ListView {
     };
 
     /**
+     * 当前touch x坐标
      * Current touch x.
      */
     private int mX;
 
     /**
+     * 当前touch y坐标
      * Current touch y.
      */
     private int mY;
 
     /**
+     * 上一次touch x
      * Last touch x.
      */
     @SuppressWarnings("unused")
 	private int mLastX;
 
     /**
+     * 上一次touch y
      * Last touch y.
      */
     private int mLastY;
@@ -340,6 +347,7 @@ public class DragSortListView extends ListView {
     private int mDragFlags = 0;
 
     /**
+     * 左后touchevent 是由onInterceptTouchEvent 还是 onTouchEvent处理
      * Last call to an on*TouchEvent was a call to
      * onInterceptTouchEvent.
      */
@@ -370,6 +378,7 @@ public class DragSortListView extends ListView {
     private static final int ON_INTERCEPT_TOUCH_EVENT = 2;
 
     /**
+     * drag开始时取消listview本身action的位置 ON_TOUCH_EVENT在onTouchEvent 
      * Where to cancel the ListView action when a
      * drag-sort begins
      */ 
@@ -415,6 +424,7 @@ public class DragSortListView extends ListView {
     private boolean mBlockLayoutRequests = false;
 
     /**
+     * 在dragState非空闲时忽略touchevent的标志
      * Set to true when a down event happens during drag sort;
      * for example, when drag finish animations are
      * playing.
@@ -817,8 +827,10 @@ public class DragSortListView extends ListView {
             int x = mFloatLoc.x;
 
             int width = getWidth();
+            //得到x的绝对值
             if (x < 0)
                 x = -x;
+            //根据x drag比例确定alpha
             float alphaMod;
             if (x < width) {
                 alphaMod = ((float) (width - x)) / ((float) width);
@@ -835,10 +847,11 @@ public class DragSortListView extends ListView {
             canvas.clipRect(0, 0, w, h);
 
             // Log.d("mobeta", "clip rect bounds: " + canvas.getClipBounds());
+            //创建新图层 设置alpha
             canvas.saveLayerAlpha(0, 0, w, h, alpha, Canvas.ALL_SAVE_FLAG);
             mFloatView.draw(canvas);
-            canvas.restore();
-            canvas.restore();
+            canvas.restore();//将创建的图层复制到Canvas的缺省图层上
+            canvas.restore();//回复canvas到初始状态
         }
     }
 
@@ -1499,6 +1512,9 @@ public class DragSortListView extends ListView {
         }
     }
 
+    /**
+     * 恢复位置变量
+     */
     private void clearPositions() {
         mSrcPos = -1;
         mFirstExpPos = -1;
@@ -1626,6 +1642,7 @@ public class DragSortListView extends ListView {
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (mIgnoreTouchEvent) {
+        	//忽略touchevent 放弃这次touch事件 return false
             mIgnoreTouchEvent = false;
             return false;
         }
@@ -1634,12 +1651,13 @@ public class DragSortListView extends ListView {
             return super.onTouchEvent(ev);
         }
 
-        boolean more = false;
+        boolean more = false;//是否需要touch的后续事件 return more
 
         boolean lastCallWasIntercept = mLastCallWasIntercept;
         mLastCallWasIntercept = false;
 
         if (!lastCallWasIntercept) {
+        	//如果上一次调用的不是onInterceptTouchEvent 则保存touch时的坐标  确保每次touchevent坐标都有保存
             saveTouchCoords(ev);
         }
 
@@ -1675,9 +1693,12 @@ public class DragSortListView extends ListView {
         return more;
     }
 
+    /**
+     * touch事件的up或cancel时 恢复一些状态标记等
+     */
     private void doActionUpOrCancel() {
-        mCancelMethod = NO_CANCEL;
-        mInTouchEvent = false;
+        mCancelMethod = NO_CANCEL;//恢复cancelMethod
+        mInTouchEvent = false;//恢复不在touchevent
         if (mDragState == STOPPED) {
             mDragState = IDLE;
         }
@@ -1686,6 +1707,9 @@ public class DragSortListView extends ListView {
         mChildHeightCache.clear();
     }
 
+    /**
+     * 保存touch坐标
+     */
     private void saveTouchCoords(MotionEvent ev) {
         int action = ev.getAction() & MotionEvent.ACTION_MASK;
         if (action != MotionEvent.ACTION_DOWN) {
@@ -1702,10 +1726,16 @@ public class DragSortListView extends ListView {
         mOffsetY = (int) ev.getRawY() - mY;
     }
 
+    /**
+     * 获取touch事件是否被ListView本身拦截
+     */
     public boolean listViewIntercepted() {
         return mListViewIntercepted;
     }
 
+    /**
+     * touch事件是否被ListView本身拦截
+     */
     private boolean mListViewIntercepted = false;
 
     @Override
@@ -1721,6 +1751,7 @@ public class DragSortListView extends ListView {
 
         if (action == MotionEvent.ACTION_DOWN) {
             if (mDragState != IDLE) {
+            	//drag状态非空闲 则忽略touchevent 并拦截touch return true
                 // intercept and ignore
                 mIgnoreTouchEvent = true;
                 return true;
@@ -1733,9 +1764,11 @@ public class DragSortListView extends ListView {
         // the following deals with calls to super.onInterceptTouchEvent
         if (mFloatView != null) {
             // super's touch event canceled in startDrag
+        	//有floatview 则拦截touch
             intercept = true;
         } else {
             if (super.onInterceptTouchEvent(ev)) {
+            	//被ListView拦截
                 mListViewIntercepted = true;
                 intercept = true;
             }
@@ -1801,6 +1834,10 @@ public class DragSortListView extends ListView {
         }
     }
 
+    /**
+     * 处理drag
+     * @param x,y 当前touchevent的坐标
+     */
     private void continueDrag(int x, int y) {
 
         // proposed position
@@ -2171,10 +2208,9 @@ public class DragSortListView extends ListView {
 
     protected boolean onDragTouchEvent(MotionEvent ev) {
         // we are in a drag
-        @SuppressWarnings("unused")
 		int action = ev.getAction() & MotionEvent.ACTION_MASK;
 
-        switch (ev.getAction() & MotionEvent.ACTION_MASK) {
+        switch (action) {
             case MotionEvent.ACTION_CANCEL:
                 if (mDragState == DRAGGING) {
                     cancelDrag();
@@ -2210,15 +2246,15 @@ public class DragSortListView extends ListView {
      * to {@link #startDrag(int,View,int,int,int)} after obtaining
      * the floating View from the FloatViewManager.
      *
-     * @param position Item to drag.
+     * @param position drag的item位置从可见item开始数 Item to drag.
      * @param dragFlags Flags that restrict some movements of the
      * floating View. For example, set <code>dragFlags |= 
      * ~{@link #DRAG_NEG_X}</code> to allow dragging the floating
      * View in all directions except off the screen to the left.
-     * @param deltaX Offset in x of the touch coordinate from the
+     * @param deltaX drag触摸点在item中的相对坐标 Offset in x of the touch coordinate from the
      * left edge of the floating View (i.e. touch-x minus float View
      * left).
-     * @param deltaY Offset in y of the touch coordinate from the
+     * @param deltaY drag触摸点在item中的相对坐标 Offset in y of the touch coordinate from the
      * top edge of the floating View (i.e. touch-y minus float View
      * top).
      *
@@ -2232,6 +2268,7 @@ public class DragSortListView extends ListView {
             return false;
         }
 
+        //创建floatView
         View v = mFloatViewManager.onCreateFloatView(position);
 
         if (v == null) {
@@ -2271,6 +2308,7 @@ public class DragSortListView extends ListView {
         }
 
         if (getParent() != null) {
+        	//开始drag后 不允许parent View 拦截touchEvent
             getParent().requestDisallowInterceptTouchEvent(true);
         }
 
@@ -2307,7 +2345,7 @@ public class DragSortListView extends ListView {
             mDragSortTracker.startTracking();
         }
 
-        //开始drag后 向listview发送取消事件 让其不再接收touch事件
+        //开始drag后 根据mCancelMethod向listview发送取消事件 让其不再接收touch事件
         // once float view is created, events are no longer passed
         // to ListView
         switch (mCancelMethod) {
@@ -2437,6 +2475,7 @@ public class DragSortListView extends ListView {
         if (mFloatView != null) {
             mFloatView.setVisibility(GONE);
             if (mFloatViewManager != null) {
+            	//删除floatview
                 mFloatViewManager.onDestroyFloatView(mFloatView);
             }
             mFloatView = null;
@@ -2506,6 +2545,7 @@ public class DragSortListView extends ListView {
     }
 
     /**
+     * 这只drag是否有效
      * Allows for easy toggling between a DragSortListView
      * and a regular old ListView. If enabled, items are
      * draggable, where the drag init mode determines how
