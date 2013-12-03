@@ -5,12 +5,14 @@ import java.util.ArrayList;
 
 import android.support.v4.app.ListFragment;
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
 import com.mobeta.android.dslv.DragSortListView;
 import com.mobeta.android.dslv.DragSortController;
 
@@ -26,6 +28,8 @@ public class DSLVFragment extends ListFragment {
             new DragSortListView.DropListener() {
                 @Override
                 public void drop(int from, int to) {
+                	//数据位置更换
+                	Log.i("DSLVFragment", "drop");
                     if (from != to) {
                         String item = adapter.getItem(from);
                         adapter.remove(item);

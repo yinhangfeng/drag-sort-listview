@@ -1631,13 +1631,18 @@ public class DragSortListView extends ListView {
         return stopDrag(remove, velocityX);
     }
 
+    /**
+     * 停止drag
+     */
     public boolean stopDrag(boolean remove, float velocityX) {
         if (mFloatView != null) {
             mDragScroller.stopScrolling(true);
 
             if (remove) {
+            	//删除item
                 removeItem(mSrcPos - getHeaderViewsCount(), velocityX);
             } else {
+            	//动画或直接drop
                 if (mDropAnimator != null) {
                     mDropAnimator.start();
                 } else {
@@ -1862,9 +1867,10 @@ public class DragSortListView extends ListView {
     	//获取当前floatView坐标
         mFloatLoc.x = x - mDragDeltaX;
         mFloatLoc.y = y - mDragDeltaY;
-// TODO
+        //drag floatView 调整item
         doDragFloatView(true);
 
+        //scroll
         int minY = Math.min(y, mFloatViewMid + mFloatViewHeightHalf);
         int maxY = Math.max(y, mFloatViewMid - mFloatViewHeightHalf);
 
@@ -2428,7 +2434,6 @@ public class DragSortListView extends ListView {
 
         if (updated) {
         	//floatView位置参数更新则调整所有item位置
-        	//TODO
             adjustAllItems();
             int scroll = adjustScroll(movePos, moveItem, oldFirstExpPos, oldSecondExpPos);
             // Log.d("mobeta", "  adjust scroll="+scroll);
@@ -2919,6 +2924,9 @@ public class DragSortListView extends ListView {
 
     private class DragScroller implements Runnable {
 
+    	/**
+    	 * 是否在下一次run时终止
+    	 */
         private boolean mAbort;
 
         private long mPrevTime;
@@ -2927,6 +2935,9 @@ public class DragSortListView extends ListView {
         private int dy;
         private float dt;
         private long tStart;
+        /**
+         * scroll方向
+         */
         private int scrollDir;
 
         public final static int STOP = -1;
@@ -3058,6 +3069,7 @@ public class DragSortListView extends ListView {
             mBlockLayoutRequests = false;
 
             // scroll means relative float View movement
+            Log.i(TAG, "doDragFloatView");
             doDragFloatView(movePos, moveItem, false);
 
             mPrevTime = mCurrTime;
